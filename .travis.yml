@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t client_server -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true client_server npm run test
+
+after_success:
+  - docker build -t hggonzalez/multi-client ./client
+  - docker build -t hggonzalez/multi-nginx ./nginx
+  - docker build -t hggonzalez/multi-server ./server
+  - docker build -t hggonzalez/multi-worker ./worker
+  # Login in to Docker Hub
+  - echo "$DOCKER_PASSWORD" |  docker login -u "$DOCKER_ID" --password-stdin
+  # Push Docker Images to Docker Hub
+  - docker push hggonzalez/multi-client
+  - docker push hggonzalez/multi-nginx
+  - docker push hggonzalez/multi-server
+  - docker push hggonzalez/multi-worker
